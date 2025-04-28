@@ -6,7 +6,7 @@ using namespace std::chrono_literals;
 class NumberPublisherNode : public rclcpp::Node
 {
 public:
-NumberPublisherNode() : Node("number_publisher") , number_(0)
+NumberPublisherNode() : Node("number_publisher") , number_(2)
     {
         publisher_ = this->create_publisher<example_interfaces::msg::Int64>("number", 10);
         timer_ = this->create_wall_timer(1s, std::bind(&NumberPublisherNode::publish_number, this));
@@ -16,10 +16,10 @@ NumberPublisherNode() : Node("number_publisher") , number_(0)
 private:
     void publish_number()
     {
+        RCLCPP_INFO(this->get_logger(), "Publishing %d", number_);
         auto msg = example_interfaces::msg::Int64();
         msg.data = number_;
         publisher_->publish(msg);
-        number_++;
     }
     rclcpp::Publisher<example_interfaces::msg::Int64>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;

@@ -1,5 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "example_interfaces/msg/int64.hpp"
+#include "example_interfaces/srv/set_bool.hpp"
 
 using namespace std::placeholders;
 
@@ -12,6 +13,9 @@ public:
             "number", 10, 
             std::bind(&NumberCounterNode::callbackNumberCounter, this,_1));
         publisher_ = this->create_publisher<example_interfaces::msg::Int64>("number_count",10);
+        server_ = this->create_service<example_interfaces::srv::SetBool>(
+            "reset_counter",
+            std::bind(&NumberCounterNode::callbackResetCounter, this, _1,_2));
         RCLCPP_INFO(this->get_logger(), "Number counter has started....");
 
     }
@@ -19,15 +23,32 @@ public:
 private:
     void callbackNumberCounter(const example_interfaces::msg::Int64::SharedPtr msg)
     {
-        RCLCPP_INFO(this->get_logger(),"Number Received: %ld", msg->data);
-        counter_ +=msg->data;
+        RCLCPP_INFO(this->get_logger(),"Number Received: %d", msg->data);
+        counter_ += msg->data;
         auto newMsg = example_interfaces::msg::Int64();
         newMsg.data = counter_;
         publisher_->publish(newMsg);
-        
+        RCLCPP_INFO(this->get_logger(), "Counter Value: %d", counter_);
+    }
+
+    void callbackResetCounter(const example_interfaces::srv::SetBool::Request::SharedPtr request,
+                              const example_interfaces::srv::SetBool::Response::SharedPtr response)
+    {
+        if (request->data == true){
+            counter_ = 0;
+            response->success = true;
+            response->message = "Counter reset to 0....";
+            RCLCPP_INFO(this->get_logger(), "Counter has been reset");
+        }
+        else{
+            response->success = false;
+            response->message = "No changes made...";
+            RCLCPP_INFO(this->get_logger(), "No changes due to negative request");
+        }
     }
     rclcpp::Subscription<example_interfaces::msg::Int64>::SharedPtr subscriber_;
     rclcpp::Publisher<example_interfaces::msg::Int64>::SharedPtr publisher_;
+    rclcpp::Service<example_interfaces::srv::SetBool>::SharedPtr server_;
     int counter_;
 };
 
