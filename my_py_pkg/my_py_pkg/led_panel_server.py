@@ -8,7 +8,11 @@ from functools import partial
 class LedPanelServerNode(Node):
     def __init__(self):
         super().__init__("led_panel_server")
-        self.led_panel_state = LedPanelState(led_state=[0,0,0])
+
+        self.declare_parameter("led_states", [0,0,0])
+        led_states_ = self.get_parameter("led_states").value
+
+        self.led_panel_state = LedPanelState(led_state=led_states_)
         self.pub_ = self.create_publisher(
             LedPanelState, "led_panel_state", 10)
         self.set_led_service_ = self.create_service(

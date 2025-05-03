@@ -6,10 +6,15 @@ using namespace std::chrono_literals;
 class NumberPublisherNode : public rclcpp::Node
 {
 public:
-NumberPublisherNode() : Node("number_publisher") , number_(2)
+NumberPublisherNode() : Node("number_publisher")
     {
+        this->declare_parameter("number", 2);
+        this->declare_parameter("timer_period", 1.0);
+        number_ = this->get_parameter("number").as_int();
+        timer_period_ = this->get_parameter("timer_period").as_double();
+
         publisher_ = this->create_publisher<example_interfaces::msg::Int64>("number", 10);
-        timer_ = this->create_wall_timer(1s, std::bind(&NumberPublisherNode::publish_number, this));
+        timer_ = this->create_wall_timer(std::chrono::duration<double>(timer_period_), std::bind(&NumberPublisherNode::publish_number, this));
         RCLCPP_INFO(this->get_logger(), "Number publisher has started...");
     }
 
@@ -24,6 +29,7 @@ private:
     rclcpp::Publisher<example_interfaces::msg::Int64>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
     int number_;
+    double timer_period_;
 
 };
 
